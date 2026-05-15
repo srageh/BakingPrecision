@@ -4,12 +4,13 @@
     {
         public int Id { get; set; }
         public decimal Quantity { get; set; }
+        public decimal GramWeight { get; set; }
         public int RecipeId { get; set; }
         public Recipe Recipe { get; set; } = null;
         public int IngredientId { get; set; }
         public Ingredient Ingredient { get; set; } = null;
 
-        public int UnitId { get; set; }
-        public Unit Unit { get; set; }
+        public int? UnitId { get; set; }
+        public Unit? Unit { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using BakingPrecision.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BakingPrecision.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260514230944_UpdatePrecisionModels")]
+    partial class UpdatePrecisionModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.15");
@@ -89,12 +92,6 @@ namespace BakingPrecision.API.Migrations
                             Id = 9,
                             IngredientCategoryId = 5,
                             Name = "Baking Powder"
-                        },
-                        new
-                        {
-                            Id = 10,
-                            IngredientCategoryId = 2,
-                            Name = "Brown Sugar"
                         });
                 });
 
@@ -178,71 +175,6 @@ namespace BakingPrecision.API.Migrations
                     b.HasIndex("UnitId");
 
                     b.ToTable("IngredientConversions");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            GramsPerUnit = 120.0m,
-                            IngredientId = 1,
-                            UnitId = 4
-                        },
-                        new
-                        {
-                            Id = 2,
-                            GramsPerUnit = 200.0m,
-                            IngredientId = 2,
-                            UnitId = 4
-                        },
-                        new
-                        {
-                            Id = 3,
-                            GramsPerUnit = 227.0m,
-                            IngredientId = 3,
-                            UnitId = 4
-                        },
-                        new
-                        {
-                            Id = 4,
-                            GramsPerUnit = 236.0m,
-                            IngredientId = 5,
-                            UnitId = 4
-                        },
-                        new
-                        {
-                            Id = 5,
-                            GramsPerUnit = 240.0m,
-                            IngredientId = 6,
-                            UnitId = 4
-                        },
-                        new
-                        {
-                            Id = 6,
-                            GramsPerUnit = 6.0m,
-                            IngredientId = 7,
-                            UnitId = 5
-                        },
-                        new
-                        {
-                            Id = 7,
-                            GramsPerUnit = 6.0m,
-                            IngredientId = 8,
-                            UnitId = 5
-                        },
-                        new
-                        {
-                            Id = 8,
-                            GramsPerUnit = 4.0m,
-                            IngredientId = 9,
-                            UnitId = 5
-                        },
-                        new
-                        {
-                            Id = 9,
-                            GramsPerUnit = 213.0m,
-                            IngredientId = 10,
-                            UnitId = 4
-                        });
                 });
 
             modelBuilder.Entity("BakingPrecision.API.Models.Media", b =>
@@ -305,7 +237,6 @@ namespace BakingPrecision.API.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("GramWeight")
-                        .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("IngredientId")

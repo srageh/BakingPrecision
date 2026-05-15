@@ -21,6 +21,8 @@ namespace BakingPrecision.API.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<Unit>().HasData(
                 new Unit { Id = 1, Name = "Gram", Abbreviation = "g", System = "Metric" },
                 new Unit { Id = 2, Name = "Kilogram", Abbreviation = "kg", System = "Metric" },
@@ -53,18 +55,46 @@ namespace BakingPrecision.API.Data
                 new Ingredient { Id = 6, Name = "Whole Milk", IngredientCategoryId = 4 },
                 new Ingredient { Id = 7, Name = "Table Salt", IngredientCategoryId = 7 },
                 new Ingredient { Id = 8, Name = "Baking Soda", IngredientCategoryId = 5 },
-                new Ingredient { Id = 9, Name = "Baking Powder", IngredientCategoryId = 5 }
+                new Ingredient { Id = 9, Name = "Baking Powder", IngredientCategoryId = 5 },
+                new Ingredient { Id = 10, Name = "Brown Sugar", IngredientCategoryId = 2 }
             );
 
+            // Seed data for precise mathematical conversions
+            modelBuilder.Entity<IngredientConversion>().HasData(
+                new IngredientConversion { Id = 1, IngredientId = 1, UnitId = 4, GramsPerUnit = 120.0m },
 
-            base.OnModelCreating(modelBuilder);
+                new IngredientConversion { Id = 2, IngredientId = 2, UnitId = 4, GramsPerUnit = 200.0m },
+
+                new IngredientConversion { Id = 3, IngredientId = 3, UnitId = 4, GramsPerUnit = 227.0m },
+
+                new IngredientConversion { Id = 4, IngredientId = 5, UnitId = 4, GramsPerUnit = 236.0m },
+
+                new IngredientConversion { Id = 5, IngredientId = 6, UnitId = 4, GramsPerUnit = 240.0m },
+
+                new IngredientConversion { Id = 6, IngredientId = 7, UnitId = 5, GramsPerUnit = 6.0m },
+
+                new IngredientConversion { Id = 7, IngredientId = 8, UnitId = 5, GramsPerUnit = 6.0m },
+
+                new IngredientConversion { Id = 8, IngredientId = 9, UnitId = 5, GramsPerUnit = 4.0m },
+
+                new IngredientConversion { Id = 9, IngredientId = 10, UnitId = 4, GramsPerUnit = 213.0m }
+            );
+
+            // Decimal Precisions
             modelBuilder.Entity<IngredientConversion>()
                 .Property(c => c.GramsPerUnit)
                 .HasPrecision(18, 2);
+
             modelBuilder.Entity<RecipeIngredient>()
-                .Property(c=> c.Quantity)
+                .Property(c => c.Quantity)
+                .HasPrecision(18, 2);
+
+            // ADDED: Precision for the new GramWeight column
+            modelBuilder.Entity<RecipeIngredient>()
+                .Property(c => c.GramWeight)
                 .HasPrecision(18, 2);
         }
+
 
     }
 }
