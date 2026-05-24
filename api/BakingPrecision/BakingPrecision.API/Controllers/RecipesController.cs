@@ -126,106 +126,97 @@ namespace BakingPrecision.API.Controllers
                 RecipeIngredients = new List<RecipeIngredient>()
             };
 
-
-
-
             foreach (var recipeStep in recipeDTO.Instructions)
             {
-                recipe.Steps.Add(
-                    new RecipeStep
-                    {
-                        StepNumber = recipeStep.StepNumber,
-                        Instruction = recipeStep.Instruction
-
-                    });
+                recipe.Steps.Add(new RecipeStep
+                {
+                    StepNumber = recipeStep.StepNumber,
+                    Instruction = recipeStep.Instruction
+                });
             }
 
-        //    public int Id { get; set; }
-        //public string Title { get; set; } = string.Empty;
-        //public string? SourceUrl { get; set; }
-        //public int? PrepTimeMinutes { get; set; }
-        //public int? CookTimeMinutes { get; set; }
-        //public string? Yield { get; set; }
-        //public List<IngredientDTO> Ingredients { get; set; } = new();
-        //public List<InstructionDto> Instructions { get; set; } = new();
+            var otherCategory = await _context.IngredientCategories.FirstOrDefaultAsync(c => c.Name == "Other");
 
-            foreach(var ingrDTO in recipeDTO.Ingredients)
+            foreach (var ingrDTO in recipeDTO.Ingredients)
             {
-                var ingredient = await _context.Ingredients.FirstOrDefaultAsync(x=> x.Name.ToLower() == ingrDTO.Name.ToLower());
-                //Fetch or add new ingredient
+                var ingredient = await _context.Ingredients.FirstOrDefaultAsync(x => x.Name.ToLower() == ingrDTO.Name.ToLower());
 
-                if(ingredient == null)
+                if (ingredient == null)
                 {
-                    var category = await _context.IngredientCategories.FirstOrDefaultAsync(x=> x.Name.ToLower() == ingrDTO.CategoryName.ToLower());
-                    if(category == null)
-                    {
-                        category = await _context.IngredientCategories.FirstOrDefaultAsync(c => c.Name == "Other");
+                    var category = await _context.IngredientCategories.FirstOrDefaultAsync(x => x.Name.ToLower() == ingrDTO.CategoryName.ToLower());
 
-                        if (category == null)
+                    if (category == null)
+                    {
+                        if (otherCategory == null)
                         {
-                            category = new IngredientCategory { Name = "Other" };
-                            _context.IngredientCategories.Add(category);
-                            await _context.SaveChangesAsync();
+                            otherCategory = new IngredientCategory { Name = "Other" };
+                            _context.IngredientCategories.Add(otherCategory);
                         }
+                        category = otherCategory;
                     }
+
                     ingredient = new Ingredient
                     {
                         Name = ingrDTO.Name,
-                        IngredientCategoryId = category.Id
+                        Category = category // Matches your Ingredient.cs model perfectly
                     };
+
                     _context.Ingredients.Add(ingredient);
-                    await _context.SaveChangesAsync();
                 }
 
-                var cleanUnitName = ingrDTO.Unit.ToLower().TrimEnd('s');
-                //Fetch Unit
-                var unit = await _context.Units.FirstOrDefaultAsync(u => 
-                u.Abbreviation == cleanUnitName ||
-                u.Name == cleanUnitName
-                );
-
-                //Conversions and Calculations 
-                var conversion = await _context.IngredientConversions.FirstOrDefaultAsync(i => 
-                i.IngredientId == ingredient.Id 
-                && unit != null
-                && i.UnitId == unit.Id
-                );
-
-                decimal conversionGramWeight;
-                if (conversion != null)
+                string cleanUnitName = null;
+                if (!string.IsNullOrWhiteSpace(ingrDTO.Unit))
                 {
-                    conversionGramWeight = ingrDTO.Quantity * conversion.GramsPerUnit;
-
+                    var unitLower = ingrDTO.Unit.Trim().ToLower();
+                    cleanUnitName = unitLower switch
+                    {
+                        "tablespoon" or "tablespoons" or "tbsps" or "tbsp" => "tbsp",
+                        "teaspoon" or "teaspoons" or "tsps" or "tsp" => "tsp",
+                        "cup" or "cups" or "c" => "cup",
+                        "gram" or "grams" or "g" => "g",
+                        "ounce" or "ounces" or "oz" => "oz",
+                        "pound" or "pounds" or "lb" or "lbs" => "lb",
+                        _ => unitLower
+                    };
                 }
-                else
-                {
-                    conversionGramWeight = ingrDTO.GramWeight;
 
+                Unit unit = null;
+                if (cleanUnitName != null)
+                {
+                    unit = await _context.Units.FirstOrDefaultAsync(u =>
+                        u.Abbreviation == cleanUnitName || u.Name == cleanUnitName);
+                }
+
+                decimal conversionGramWeight = ingrDTO.GramWeight;
+
+                if (ingredient.Id != 0 && unit != null)
+                {
+                    var conversion = await _context.IngredientConversions.FirstOrDefaultAsync(i =>
+                        i.IngredientId == ingredient.Id && i.UnitId == unit.Id);
+
+                    if (conversion != null)
+                    {
+                        conversionGramWeight = ingrDTO.Quantity * conversion.GramsPerUnit;
+                    }
                 }
 
                 recipe.RecipeIngredients.Add(new RecipeIngredient
                 {
-                    IngredientId = ingredient.Id,
-                    UnitId = unit?.Id,
+                    Ingredient = ingredient,
+                    Unit = unit,
                     Quantity = ingrDTO.Quantity,
                     GramWeight = conversionGramWeight
-
                 });
-
-
-
             }
 
-
-
-
-
-
             _context.Recipes.Add(recipe);
+
+            // Everything saves to the database right here in one clean transaction
             await _context.SaveChangesAsync();
+
             recipeDTO.Id = recipe.Id;
 
-            return CreatedAtAction("GetRecipe", new { id = recipe.Id }, recipe);
+            return CreatedAtAction("GetRecipe", new { id = recipe.Id }, recipeDTO);
         }
 
         // DELETE: api/Recipes/5
